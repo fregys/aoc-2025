@@ -1,5 +1,9 @@
 import java.lang.invoke.MethodHandles
 
+
+/*
+https://adventofcode.com/2025/day/1
+ */
 fun main() {
     val folderName = MethodHandles.lookup().lookupClass().simpleName.removeSuffix("Kt")
 
