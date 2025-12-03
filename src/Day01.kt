@@ -3,7 +3,7 @@ import java.lang.invoke.MethodHandles
 fun main() {
     val folderName = MethodHandles.lookup().lookupClass().simpleName.removeSuffix("Kt")
 
-    val input = readInput("$folderName/test")
+    val input = readInput("$folderName/input")
     var position = 50
     var secretCode = 0
     val modulo = 100
