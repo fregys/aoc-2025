@@ -2,7 +2,7 @@ import java.lang.invoke.MethodHandles
 
 
 /*
-https://adventofcode.com/2025/day/4
+https://adventofcode.com/2025/day/5
  */
 fun main() {
     val folderName = MethodHandles.lookup().lookupClass().simpleName.removeSuffix("Kt")
@@ -34,21 +34,51 @@ fun main() {
 
     fun part2(filename: String): Long {
         val input = readInput(filename)
-        val freshIdsSet: MutableSet<Long> = mutableSetOf()
-        var freshIds: Long = 0
+        val finalRanges: MutableSet<Pair<Long, Long>> = mutableSetOf()
 
+        var freshIds: Long = 0
         for (line in input) {
             if (line == "") {
                 break
             }
 
-            val lineSplit = line.split("-")
-            for (id in lineSplit[0].toLong()..lineSplit[1].toLong()) {
-                if (!freshIdsSet.contains(id)) {
-                    freshIds ++
-                    freshIdsSet.add(id)
-                }
+            val newLine = line.split("-")
+            var curMinValue = newLine[0].toLong()
+            var curMaxValue = newLine[1].toLong()
+
+            if (finalRanges.isEmpty()) {
+                finalRanges.add(Pair(curMinValue, curMaxValue))
+                continue
             }
+
+            var addRange = false
+            for (finalRange in finalRanges.toList()){
+                if ((curMinValue >= finalRange.first && curMinValue <= finalRange.second)
+                    || (curMaxValue >= finalRange.first && curMaxValue <= finalRange.second)) {
+
+                    if (!(curMinValue >= finalRange.first && curMinValue <= finalRange.second)) {
+                        // Only upper bound is in
+                        curMaxValue = finalRange.first - 1
+                    } else if (!(curMaxValue >= finalRange.first && curMaxValue <= finalRange.second)) {
+                        // Only lower bound is in
+                        curMinValue = finalRange.second + 1
+                    } else {
+                        // Both bounds are in
+                        addRange = true
+                        break
+                    }
+                } else if (curMinValue < finalRange.first && curMaxValue > finalRange.second){
+                    // On both sides
+                    finalRanges.remove(finalRange)
+                }
+                // On one of the sides of the range
+            }
+
+            if (!addRange) finalRanges.add(Pair(curMinValue, curMaxValue))
+        }
+
+        for (range in finalRanges) {
+            freshIds += range.second - range.first + 1
         }
 
         return freshIds
