@@ -2,7 +2,7 @@ import java.lang.invoke.MethodHandles
 
 
 /*
-https://adventofcode.com/2025/day/4
+https://adventofcode.com/2025/day/x
  */
 fun main() {
     val folderName = MethodHandles.lookup().lookupClass().simpleName.removeSuffix("Kt")
