@@ -1,6 +1,7 @@
 import java.lang.invoke.MethodHandles
 import com.google.ortools.Loader
 import com.google.ortools.linearsolver.MPSolver
+import com.google.ortools.linearsolver.MPVariable
 
 
 /*
@@ -65,7 +66,7 @@ class Rec2(
 
 fun main() {
     val folderName = MethodHandles.lookup().lookupClass().simpleName.removeSuffix("Kt")
-    
+
     fun part1(filename: String): Long {
         val input = readInput(filename)
 
@@ -99,36 +100,51 @@ fun main() {
         return totalMin
     }
 
-    fun part2(filename: String): Long {
+    fun part2(filename: String): Double {
         val input = readInput(filename)
 
-        var totalMin: Long = 0
-        var counter = 0
+        Loader.loadNativeLibraries()
+
+        var totalMin = 0.0
         for (line in input) {
-            val mem: MutableMap<MutableList<Int>, Int> = mutableMapOf()
             val targetJoltages: MutableList<Int> = mutableListOf()
-            val buttonsWirings: MutableSet<MutableSet<Int>> = mutableSetOf()
 
-            val splitLine = line.split(" ").toMutableList()
-
-            for (buttonWiring in splitLine.subList(1, splitLine.size -1)) {
-                val buttonsSchemaWiring: MutableSet<Int> = mutableSetOf()
-                val buttonListCleaned = buttonWiring.replace("(", "").replace(")", "").split(",")
-                for (button in buttonListCleaned) {
-                    buttonsSchemaWiring.add(button.toInt())
-                }
-                buttonsWirings.add(buttonsSchemaWiring)
-            }
+            val solver = MPSolver.createSolver("CP-SAT")
+            val objective = solver.objective()
+            objective.setMinimization()
 
             for (targetJoltage in line.substringAfter("{").substringBefore('}').split(",")){
                 targetJoltages.add(targetJoltage.toInt())
             }
 
-            val recCls = Rec2(mem, targetJoltages, buttonsWirings)
-            recCls.run((MutableList(targetJoltages.size) {0}), 0)
-            totalMin += recCls.mem[targetJoltages]!!
-            println("Line ${counter} done")
-            counter++
+            val splitLine = line.split(" ").toMutableList()
+            val buttonsList = splitLine.subList(1, splitLine.size -1)
+            val buttonsWirings: MutableList<MutableList<Int>> = MutableList(targetJoltages.size) {mutableListOf()}
+
+            val solverVars: MutableList<MPVariable> = mutableListOf()
+            for ((index, buttonWiring) in buttonsList.withIndex()) {
+                val buttonListCleaned = buttonWiring.replace("(", "").replace(")", "").split(",")
+                for (button in buttonListCleaned) {
+                    buttonsWirings[button.toInt()].add(index)
+                    val solverVar = solver.makeNumVar(0.0, Double.POSITIVE_INFINITY, index.toString())
+                    solverVars.add(solverVar)
+                    objective.setCoefficient(solverVar, 1.0)
+                }
+            }
+
+            for ((index, targetJoltage) in targetJoltages.withIndex()) {
+                val constraint = solver.makeConstraint(targetJoltage.toDouble(), targetJoltage.toDouble(), "c${index}")
+                for (buttonWiring in buttonsWirings[index]) {
+                    constraint.setCoefficient(solverVars[buttonWiring], 1.0)
+                }
+            }
+
+            val resultStatus = solver.solve()
+            if (resultStatus != MPSolver.ResultStatus.OPTIMAL) {
+                throw IllegalStateException()
+            }
+
+            totalMin += objective.value()
         }
 
         return totalMin

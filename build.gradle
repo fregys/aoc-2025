@@ -1,0 +1,28 @@
+plugins {
+    id 'org.jetbrains.kotlin.jvm' version '1.9.22'
+    id 'application'
+}
+
+group = 'org.example'
+version = '1.0-SNAPSHOT'
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    implementation 'com.google.ortools:ortools-java:9.11.4210'
+    implementation 'org.jetbrains.kotlin:kotlin-stdlib'
+}
+
+application {
+    mainClass.set("MainKt")
+}
+
+sourceSets {
+    main {
+        kotlin {
+            srcDirs = ['src']
+        }
+    }
+}
